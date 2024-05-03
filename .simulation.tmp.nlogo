@@ -51,7 +51,7 @@ to setup-turtles
     set color orange
     set size 2
     setxy min-pxcor + 2 (min-pycor + (world-height / 4))
-    set v 5
+    set v 0
     set θ random 360
   ]
   create-turtles 1 [
@@ -59,7 +59,7 @@ to setup-turtles
     set color violet
     set size 2
     setxy min-pxcor + 2 (min-pycor - (world-height / 4))
-    set v 5
+    set v
     set θ random 360
   ]
 end
@@ -76,7 +76,8 @@ to update-positions
   ask turtles [
     let new-x x + v * dt * cos θ
     let new-y y + v * dt * sin θ
-    setxy new-x new-y
+    set x new-x
+    set y new-y
   ]
 end
 
