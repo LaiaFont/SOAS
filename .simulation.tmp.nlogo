@@ -31,7 +31,7 @@ to setup
   set max-displacement 6.9
 
   ; C or Y
-   create-turtles (1) [
+   create-turtles 1 [
     set color orange
     setxy world-width / 2 + 2 -1
     set target-lane pycor
@@ -45,7 +45,7 @@ to setup
   create-turtles 1 [
     set color violet
     setxy world-width / 2 + 2 1
-    set target-lane pyco
+    set target-lane -1
     set heading 90
     set top-speed 15
     set speed 0.5
@@ -104,12 +104,13 @@ end
 to go
   ask turtles [ move-forward ]
   ;move-cars
-  ;check-collision
+  ;check-collisio
   ask turtles with [ ycor != target-lane ] [ move-to-target-lane ]
   tick
 end
 
 to move-forward ; turtle procedure
+  print word "pYCOR: " pycor
   set heading 90
   speed-up-car ; we tentatively speed up, but might have to slow down
   let blocking-cars other turtles in-cone (1 + speed) 180 with [ y-distance <= 1 ]
@@ -148,7 +149,7 @@ to move-to-target-lane ; turtle procedure
   let blocking-cars other turtles in-cone (1 + abs (ycor - target-lane)) 180 with [ x-distance <= 1 ]
   let blocking-car min-one-of blocking-cars [ distance myself ]
   ifelse blocking-car = nobody [
-    forward 0.2
+    forward 1
     set ycor precision ycor 1 ; to avoid floating point errors
   ] [
     ; slow down if the car blocking us is behind, otherwise speed up
@@ -182,6 +183,21 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
+
+SLIDER
+0
+0
+0
+0
+NIL
+NIL
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
 
 BUTTON
 43
