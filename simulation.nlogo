@@ -27,7 +27,7 @@ to setup
   ;; Set up simulation parameters
   set lane-width 4
   set car-length 4.6
-  set max-velocity 15
+  set max-velocity 0.01
   set max-displacement 6.9
 
   ; C or Y
@@ -36,7 +36,7 @@ to setup
     setxy world-width / 2 + 2 -1
     set target-lane pycor
     set heading 90
-    set top-speed 15
+    set top-speed max-velocity
     set speed turtle-speed
     set action orange-yield
   ]
@@ -47,7 +47,7 @@ to setup
     setxy world-width / 2 + 2 1
     set target-lane -1
     set heading 90
-    set top-speed 15
+    set top-speed max-velocity
     set speed turtle-speed
     set action violet-merge-ahead
   ]
@@ -264,7 +264,7 @@ acceleration
 acceleration
 -9
 3
-1.0
+0.0
 1
 1
 NIL
@@ -278,9 +278,9 @@ SLIDER
 turtle-speed
 turtle-speed
 0
-100
-50.0
-1
+0.1
+0.01
+0.01
 1
 NIL
 HORIZONTAL
