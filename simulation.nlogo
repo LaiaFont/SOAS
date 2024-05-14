@@ -1,104 +1,166 @@
 globals [
-  T ; trajectory duration
-  dt ; timestep
-  L ; vehicle length
-  W ; vehicle width
-]
-
-patches-own [
-  food-objects   ; The food objects on the patch {HH, HL, LL}
+  lane-width     ;; Width of each lane
+  car-length     ;; Length of each car
+  max-velocity   ;; Maximum velocity of cars
+  max-displacement ;; Maximum displacement for staggering starting positions
+  lanes
+  number-of-lanes
+  actions-merge
+  actions-continue
 ]
 
 turtles-own [
-  x ; x position
-  y ; y position
-  v ; velocity
-  θ ; heading
+  speed         ; the current speed of the car
+  top-speed     ; the maximum speed of the car (different for all cars)
+  target-lane   ; the desired lane of the car
+  action        ; the driver's action (LCA or LCB; C or Y)
 ]
 
 to setup
   clear-all
-  setup-constants
-  setup-turtles
-  setup-environment
+  set number-of-lanes 2
+  set-default-shape turtles "car"
+  set actions-merge ["LCA" "LCB"]
+  set actions-continue ["Y" "C"]
+
+  draw-road
+  ;; Set up simulation parameters
+  set lane-width 4
+  set car-length 4.6
+  set max-velocity 15
+  set max-displacement 6.9
+
+  ; C or Y
+   create-turtles (1) [
+    set color orange
+    setxy world-width / 2 + 2 -1
+    set target-lane pycor
+    set heading 90
+    set top-speed 15
+    set speed 0.5
+    set action orange-yield
+  ]
+
+  ; LCA or LCB
+  create-turtles 1 [
+    set color violet
+    setxy world-width / 2 + 2 1
+    set target-lane 1
+    set heading 90
+    set top-speed 15
+    set speed 0.5
+    set action violet-merge-ahead
+  ]
+
   reset-ticks
 end
 
-to setup-constants
-  set T 4 ; trajectory duration
-  set dt 0.2 ; timestep
-  set L 4.6 ; vehicle length
-  set W 2 ; vehicle width
-end
-
-to setup-environment
-  set-patch-size 15  ; Adjust the patch size as needed
-  resize-world -16 16 -16 16  ; Adjust the world dimensions as needed
-
+to draw-road
   ask patches [
-    ;; Draw the ground
-    ifelse pycor = 0 [
-      set pcolor white
-    ] [
-      set pcolor black ; or any color you prefer for the ground
+    ; the road is surrounded by green grass of varying shades
+    set pcolor green - random-float 0.5
+  ]
+  set lanes n-values number-of-lanes [ n -> number-of-lanes - (n * 2) - 1 ]
+  ask patches with [ abs pycor <= number-of-lanes ] [
+    ; the road itself is varying shades of grey
+    set pcolor grey - 2.5 + random-float 0.25
+  ]
+  draw-road-lines
+end
+
+to draw-road-lines
+  let y (last lanes) - 1 ; start below the "lowest" lane
+  while [ y <= first lanes + 1 ] [
+    if not member? y lanes [
+      ; draw lines on road patches that are not part of a lane
+      ifelse abs y = number-of-lanes
+        [ draw-line y yellow 0 ]  ; yellow for the sides of the road
+        [ draw-line y white 0.5 ] ; dashed white between lanes
     ]
+    set y y + 1 ; move up one patch
   ]
 end
 
-to setup-turtles
+to draw-line [ y line-color gap ]
+  ; We use a temporary turtle to draw the line:
+  ; - with a gap of zero, we get a continuous line;
+  ; - with a gap greater than zero, we get a dashed line.
   create-turtles 1 [
-    set shape "car"
-    set color orange
-    set size 2
-    setxy min-pxcor + 2 (min-pycor + (world-height / 4))
-    set v 5
-    set θ random 360
-  ]
-  create-turtles 1 [
-    set shape "car"
-    set color violet
-    set size 2
-    setxy min-pxcor + 2 (min-pycor - (world-height / 4))
-    set v 5
-    set θ random 360
+    setxy (min-pxcor - 0.5) y
+    hide-turtle
+    set color line-color
+    set heading 90
+    repeat world-width [
+      pen-up
+      forward gap
+      pen-down
+      forward (1 - gap)
+    ]
+    die
   ]
 end
+
 
 to go
-  if not simulation-over? [
-    update-positions
-    check-collision
-    tick
+  ask turtles [ move-forward ]
+  ;move-cars
+  ;check-collision
+  ask turtles with [ ycor != target-lane ] [ move-to-target-lane ]
+  tick
+end
+
+to move-forward ; turtle procedure
+  set heading 90
+  speed-up-car ; we tentatively speed up, but might have to slow down
+  let blocking-cars other turtles in-cone (1 + speed) 180 with [ y-distance <= 1 ]
+  let blocking-car min-one-of blocking-cars [ distance myself ]
+  if blocking-car != nobody [
+    ; match the speed of the car ahead of you and then slow
+    ; down so you are driving a bit slower than that car.
+    set speed [ speed ] of blocking-car
+    slow-down-car
   ]
+  forward speed
 end
 
-to update-positions
-  ask turtles [
-    let new-x x + v * dt * cos θ
-    let new-y y + v * dt * sin θ
-    setxy new-x new-y
+to-report x-distance
+  report distancexy [ xcor ] of myself ycor
+end
+
+to-report y-distance
+  report distancexy xcor [ ycor ] of myself
+end
+
+to slow-down-car ; turtle procedure
+  set speed (speed - deceleration)
+  if speed < 0 [ set speed deceleration ]
+  ; every time you hit the brakes, you loose a little patience
+  ;set patience patience - 1
+end
+
+to speed-up-car ; turtle procedure
+  set speed (speed + acceleration)
+  if speed > top-speed [ set speed top-speed ]
+end
+
+to move-to-target-lane ; turtle procedure
+  set heading ifelse-value target-lane < ycor [ 180 ] [ 0 ]
+  let blocking-cars other turtles in-cone (1 + abs (ycor - target-lane)) 180 with [ x-distance <= 1 ]
+  let blocking-car min-one-of blocking-cars [ distance myself ]
+  ifelse blocking-car = nobody [
+    forward 0.2
+    set ycor precision ycor 1 ; to avoid floating point errors
+  ] [
+    ; slow down if the car blocking us is behind, otherwise speed up
+    ifelse towards blocking-car <= 180 [ slow-down-car ] [ speed-up-car ]
   ]
-end
-
-to check-collision
-  let car1 one-of turtles with [color = orange]
-  let car2 one-of turtles with [color = violet]
-  ;if distance car1 car2 < 1 [ ; collision threshold
-  ;  print "Collision occurred!"
-  ;  stop
-  ;]
-end
-
-to-report simulation-over?
-  ; Add condition to end simulation
-  report ticks > 1000
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 217
 23
 720
-527
+287
 -1
 -1
 15.0
@@ -113,8 +175,8 @@ GRAPHICS-WINDOW
 1
 -16
 16
--16
-16
+-8
+8
 0
 0
 1
@@ -154,6 +216,58 @@ NIL
 NIL
 NIL
 1
+
+SWITCH
+26
+96
+190
+129
+violet-merge-ahead
+violet-merge-ahead
+1
+1
+-1000
+
+SWITCH
+31
+160
+156
+193
+orange-yield
+orange-yield
+1
+1
+-1000
+
+SLIDER
+48
+232
+220
+265
+deceleration
+deceleration
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+78
+315
+250
+348
+acceleration
+acceleration
+-9
+3
+1.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
