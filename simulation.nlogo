@@ -20,36 +20,57 @@ to setup
   clear-all
   set number-of-lanes 2
   set-default-shape turtles "car"
-  set actions-merge ["LCA" "LCB"]
   set actions-continue ["Y" "C"]
 
   draw-road
   ;; Set up simulation parameters
   set lane-width 4
   set car-length 4.6
-  set max-velocity 0.01
+  set max-velocity 10
   set max-displacement 6.9
 
   ; C or Y
    create-turtles 1 [
     set color orange
-    setxy world-width / 2 + 2 -1
+    setxy 4 -1
+    set size 2
     set target-lane pycor
     set heading 90
     set top-speed max-velocity
-    set speed turtle-speed
-    set action orange-yield
+    ifelse orange-yield [
+      ; Set speed to a low random interval if LCB
+      set speed random-float (max-velocity * 0.25)
+    ] [
+      ; Set speed to a high random interval if LCA
+      set speed random-float (max-velocity * 0.75) + (max-velocity * 0.25)
+    ]
   ]
 
   ; LCA or LCB
   create-turtles 1 [
     set color violet
-    setxy world-width / 2 + 2 1
+    setxy 4 1
+    set size 2
     set target-lane -1
     set heading 90
     set top-speed max-velocity
-    set speed turtle-speed
-    set action violet-merge-ahead
+    ifelse violet-merge-behind [
+      ; Set speed to a low random interval if LCB
+      set speed random-float (max-velocity * 0.25)
+    ] [
+      ; Set speed to a high random interval if LCA
+      set speed random-float (max-velocity * 0.75) + (max-velocity * 0.25)
+    ]
+  ]
+
+  create-turtles 1 [
+    set color red
+    setxy 22 1
+    set size 2
+    set target-lane 1
+    set heading 90
+    set top-speed 0
+    set speed 0
   ]
 
   reset-ticks
@@ -106,11 +127,11 @@ to go
   ;move-cars
   ;check-collisio
   ask turtles with [ ycor != target-lane ] [ move-to-target-lane ]
+  wait 0.001
   tick
 end
 
 to move-forward ; turtle procedure
-  print word "pYCOR: " pycor
   set heading 90
   speed-up-car ; we tentatively speed up, but might have to slow down
   let blocking-cars other turtles in-cone (1 + speed) 180 with [ y-distance <= 1 ]
@@ -121,7 +142,7 @@ to move-forward ; turtle procedure
     set speed [ speed ] of blocking-car
     slow-down-car
   ]
-  forward speed
+  forward speed / 1000
 end
 
 to-report x-distance
@@ -132,35 +153,45 @@ to-report y-distance
   report distancexy xcor [ ycor ] of myself
 end
 
-to slow-down-car ; turtle procedure
-  set speed (speed - deceleration)
-  if speed < 0 [ set speed deceleration ]
-  ; every time you hit the brakes, you loose a little patience
-  ;set patience patience - 1
+to slow-down-car ;
+  set speed (speed - 0.1 * speed)
+  if speed < 0 [ set speed 0 ]
 end
 
 to speed-up-car ; turtle procedure
   set speed (speed + acceleration)
   if speed > top-speed [ set speed top-speed ]
+  if speed < 0 [ set speed 0 ]
 end
 
-to move-to-target-lane ; turtle procedure
+to move-to-target-lane
   set heading ifelse-value target-lane < ycor [ 180 ] [ 0 ]
-  let blocking-cars other turtles in-cone (1 + abs (ycor - target-lane)) 180 with [ x-distance <= 1 ]
-  let blocking-car min-one-of blocking-cars [ distance myself ]
-  ifelse blocking-car = nobody [
+  while [ycor != target-lane] [
+    let blocking-cars cars-in-oval
+    if any? blocking-cars [
+      ; Stop moving if there is a car in the oval window
+      stop
+    ]
+    ; Move in smaller increments towards the target lane
     forward 1
     set ycor precision ycor 1 ; to avoid floating point errors
-  ] [
-    ; slow down if the car blocking us is behind, otherwise speed up
-    ifelse towards blocking-car <= 180 [ slow-down-car ] [ speed-up-car ]
+  ]
+end
+
+to-report cars-in-oval
+  ; Oval window dimensions
+  let x-range 3
+  let y-range 2
+  report other turtles with [
+    abs (xcor - [xcor] of myself) <= x-range and
+    abs (ycor - [ycor] of myself) <= y-range
   ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 217
 23
-720
+1080
 287
 -1
 -1
@@ -171,11 +202,11 @@ GRAPHICS-WINDOW
 1
 1
 0
+0
+0
 1
-1
-1
--16
-16
+0
+56
 -8
 8
 0
@@ -219,13 +250,13 @@ NIL
 1
 
 SWITCH
-26
-96
-190
-129
-violet-merge-ahead
-violet-merge-ahead
-1
+8
+97
+208
+130
+violet-merge-behind
+violet-merge-behind
+0
 1
 -1000
 
@@ -236,24 +267,9 @@ SWITCH
 193
 orange-yield
 orange-yield
-1
+0
 1
 -1000
-
-SLIDER
-48
-232
-220
-265
-deceleration
-deceleration
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
 
 SLIDER
 78
@@ -262,10 +278,10 @@ SLIDER
 348
 acceleration
 acceleration
--9
-3
+-0.09
+0.03
 0.0
-1
+0.01
 1
 NIL
 HORIZONTAL
@@ -278,12 +294,29 @@ SLIDER
 turtle-speed
 turtle-speed
 0
-0.1
-0.01
-0.01
+10
+1.0
+1
 1
 NIL
 HORIZONTAL
+
+BUTTON
+107
+256
+170
+289
+go
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
