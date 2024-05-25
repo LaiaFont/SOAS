@@ -7,6 +7,8 @@ globals [
   number-of-lanes
   actions-merge
   actions-continue
+  redx
+  acceleration
 ]
 
 turtles-own [
@@ -20,14 +22,15 @@ to setup
   clear-all
   set number-of-lanes 2
   set-default-shape turtles "car"
-  set actions-continue ["Y" "C"]
 
   draw-road
   ;; Set up simulation parameters
   set lane-width 4
   set car-length 4.6
-  set max-velocity 10
+  set max-velocity 12
   set max-displacement 6.9
+  set redx 12
+  set acceleration 0.01
 
   ; C or Y
    create-turtles 1 [
@@ -39,7 +42,7 @@ to setup
     set top-speed max-velocity
     ifelse orange-yield [
       ; Set speed to a low random interval if LCB
-      set speed random-float (max-velocity * 0.25)
+      set speed random-float (max-velocity * 0.125) + (max-velocity * 0.125)
     ] [
       ; Set speed to a high random interval if LCA
       set speed random-float (max-velocity * 0.75) + (max-velocity * 0.25)
@@ -56,7 +59,7 @@ to setup
     set top-speed max-velocity
     ifelse violet-merge-behind [
       ; Set speed to a low random interval if LCB
-      set speed random-float (max-velocity * 0.25)
+      set speed random-float (max-velocity * 0.125) + (max-velocity * 0.125)
     ] [
       ; Set speed to a high random interval if LCA
       set speed random-float (max-velocity * 0.75) + (max-velocity * 0.25)
@@ -65,7 +68,7 @@ to setup
 
   create-turtles 1 [
     set color red
-    setxy 22 1
+    setxy redx 1
     set size 2
     set target-lane 1
     set heading 90
@@ -123,18 +126,20 @@ end
 
 
 to go
+  if is-finished? or has-passed-red-car? [stop]
   ask turtles [ move-forward ]
   ;move-cars
   ;check-collisio
   ask turtles with [ ycor != target-lane ] [ move-to-target-lane ]
-  wait 0.001
+  ask turtles with [color = violet][]
+  ; wait 0.001
   tick
 end
 
 to move-forward ; turtle procedure
   set heading 90
   speed-up-car ; we tentatively speed up, but might have to slow down
-  let blocking-cars other turtles in-cone (1 + speed) 180 with [ y-distance <= 1 ]
+  let blocking-cars other turtles in-cone 2 180 with [ y-distance <= 1 ]
   let blocking-car min-one-of blocking-cars [ distance myself ]
   if blocking-car != nobody [
     ; match the speed of the car ahead of you and then slow
@@ -187,11 +192,66 @@ to-report cars-in-oval
     abs (ycor - [ycor] of myself) <= y-range
   ]
 end
+
+to show-initial-speeds
+  ask turtles [
+    show (word "Car color: " color " - Initial speed: " speed)
+  ]
+end
+
+to-report is-crashed?
+  let violet-car one-of turtles with [color = violet]
+  let red-car one-of turtles with [color = red]
+  if violet-car != nobody and red-car != nobody [
+    if [xcor] of violet-car + 2 > [xcor] of red-car and [ycor] of violet-car = [ycor] of red-car [
+      report true
+    ]
+  ]
+  report false
+end
+
+to-report has-passed-red-car?
+  let violet-car one-of turtles with [color = violet]
+  let red-car one-of turtles with [color = red]
+  if violet-car != nobody and red-car != nobody [
+    if [xcor] of violet-car > [xcor] of red-car [
+      report true
+    ]
+  ]
+  report false
+end
+
+to-report is-finished?
+  report ticks > 10000 or is-crashed?
+end
+
+to-report total-time
+  if ticks > 10000 [ report 10000 ]
+  if is-finished? [report 10000]
+  if has-passed-red-car? [ report ticks ]
+  report ticks ;; Default to current ticks if none of the above conditions are met
+end
+
+to-report violet-speed
+  let violet-car one-of turtles with [color = violet]
+  if violet-car != nobody[
+    report [speed] of violet-car
+    ]
+  report -1
+end
+
+to-report orange-speed
+  let orange-car one-of turtles with [color = orange]
+  if orange-car != nobody[
+    report [speed] of orange-car
+    ]
+  report -1
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 217
 23
-1080
+540
 287
 -1
 -1
@@ -206,7 +266,7 @@ GRAPHICS-WINDOW
 0
 1
 0
-56
+20
 -8
 8
 0
@@ -256,7 +316,7 @@ SWITCH
 130
 violet-merge-behind
 violet-merge-behind
-0
+1
 1
 -1000
 
@@ -270,21 +330,6 @@ orange-yield
 0
 1
 -1000
-
-SLIDER
-78
-315
-250
-348
-acceleration
-acceleration
--0.09
-0.03
-0.0
-0.01
-1
-NIL
-HORIZONTAL
 
 SLIDER
 182
@@ -308,6 +353,42 @@ BUTTON
 289
 go
 go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+684
+231
+884
+381
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"violet speed" 1.0 0 -10141563 true "" "plot violet-speed"
+"orange speed" 1.0 0 -817084 true "" "plot orange-speed"
+
+BUTTON
+564
+486
+733
+519
+NIL
+show-initial-speeds
 NIL
 1
 T
@@ -664,6 +745,68 @@ NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="Y, LCA" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>total-time</metric>
+    <runMetricsCondition>is-finished? or has-passed-red-car?</runMetricsCondition>
+    <enumeratedValueSet variable="orange-yield">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="turtle-speed">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-merge-behind">
+      <value value="false"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Y, LCB" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>total-time</metric>
+    <runMetricsCondition>is-finished? or has-passed-red-car?</runMetricsCondition>
+    <enumeratedValueSet variable="orange-yield">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="turtle-speed">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-merge-behind">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="C, LCB" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>total-time</metric>
+    <runMetricsCondition>is-finished? or has-passed-red-car?</runMetricsCondition>
+    <enumeratedValueSet variable="orange-yield">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="turtle-speed">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-merge-behind">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="C, LCA" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>total-time</metric>
+    <runMetricsCondition>is-finished? or has-passed-red-car?</runMetricsCondition>
+    <enumeratedValueSet variable="orange-yield">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="turtle-speed">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-merge-behind">
+      <value value="false"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
