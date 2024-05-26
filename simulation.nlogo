@@ -35,7 +35,7 @@ to setup
   ; C or Y
    create-turtles 1 [
     set color orange
-    setxy 4 -1
+    setxy 4 + orange-displacement -1
     set size 2
     set target-lane pycor
     set heading 90
@@ -52,7 +52,7 @@ to setup
   ; LCA or LCB
   create-turtles 1 [
     set color violet
-    setxy 4 1
+    setxy 4 + violet-displacement 1
     set size 2
     set target-lane -1
     set heading 90
@@ -241,6 +241,7 @@ to-report orange-speed
     ]
   report -1
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 217
@@ -369,9 +370,39 @@ SWITCH
 238
 spectator-mode
 spectator-mode
-0
+1
 1
 -1000
+
+SLIDER
+10
+251
+190
+284
+orange-displacement
+orange-displacement
+0
+3
+1.0
+0.5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+12
+298
+193
+331
+violet-displacement
+violet-displacement
+0
+3
+1.5
+0.5
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -778,6 +809,138 @@ NetLogo 6.4.0
     </enumeratedValueSet>
     <enumeratedValueSet variable="violet-merge-behind">
       <value value="false"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="C, LCA displacement" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>total-time</metric>
+    <runMetricsCondition>is-finished? or has-passed-red-car?</runMetricsCondition>
+    <enumeratedValueSet variable="orange-yield">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-merge-behind">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spectator-mode">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-displacement">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="orange-displacement">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Y, LCA displacement" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>total-time</metric>
+    <runMetricsCondition>is-finished? or has-passed-red-car?</runMetricsCondition>
+    <enumeratedValueSet variable="orange-yield">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-merge-behind">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spectator-mode">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-displacement">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="orange-displacement">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Y, LCB displacement" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>total-time</metric>
+    <runMetricsCondition>is-finished? or has-passed-red-car?</runMetricsCondition>
+    <enumeratedValueSet variable="orange-yield">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-merge-behind">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spectator-mode">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-displacement">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="orange-displacement">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="C, LCB displacement" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>total-time</metric>
+    <runMetricsCondition>is-finished? or has-passed-red-car?</runMetricsCondition>
+    <enumeratedValueSet variable="orange-yield">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-merge-behind">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="spectator-mode">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="violet-displacement">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="orange-displacement">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
