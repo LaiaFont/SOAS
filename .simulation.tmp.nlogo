@@ -132,7 +132,7 @@ to go
   ;check-collisio
   ask turtles with [ ycor != target-lane ] [ move-to-target-lane ]
   ask turtles with [color = violet][]
-  ; wait 0.001
+  if spectator-mode [wait 0.001]
   tick
 end
 
@@ -190,12 +190,6 @@ to-report cars-in-oval
   report other turtles with [
     abs (xcor - [xcor] of myself) <= x-range and
     abs (ycor - [ycor] of myself) <= y-range
-  ]
-end
-
-to show-initial-speeds
-  ask turtles [
-    show (word "Car color: " color " - Initial speed: " speed)
   ]
 end
 
@@ -276,10 +270,10 @@ ticks
 30.0
 
 BUTTON
-43
-32
-107
-65
+9
+34
+73
+67
 setup
 setup
 NIL
@@ -293,10 +287,10 @@ NIL
 1
 
 BUTTON
-121
-33
-184
-66
+102
+35
+165
+68
 NIL
 go
 T
@@ -316,59 +310,27 @@ SWITCH
 130
 violet-merge-behind
 violet-merge-behind
-1
+0
 1
 -1000
 
 SWITCH
-31
-160
-156
-193
+10
+152
+135
+185
 orange-yield
 orange-yield
 0
 1
 -1000
 
-SLIDER
-182
-382
-354
-415
-turtle-speed
-turtle-speed
-0
-10
-1.0
-1
-1
-NIL
-HORIZONTAL
-
-BUTTON
-107
-256
-170
-289
-go
-go
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 PLOT
-684
-231
-884
-381
-plot 1
+570
+46
+770
+196
+Car Speed
 NIL
 NIL
 0.0
@@ -382,22 +344,34 @@ PENS
 "violet speed" 1.0 0 -10141563 true "" "plot violet-speed"
 "orange speed" 1.0 0 -817084 true "" "plot orange-speed"
 
-BUTTON
-564
-486
-733
-519
+PLOT
+569
+217
+769
+367
+Total Time
 NIL
-show-initial-speeds
 NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"time" 1.0 0 -13840069 true "" "plot total-time"
+
+SWITCH
+10
+205
+182
+238
+spectator-mode
+spectator-mode
+0
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
