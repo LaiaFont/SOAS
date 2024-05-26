@@ -407,39 +407,46 @@ HORIZONTAL
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+This model investigates under what conditions conflict arises in a specific interaction between cars. The situation is one car having to merge into a neighbouring lane because there is an obstacle in the way, while there already is a car driving in the target lane.
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+The agents (cars) each choose an action: Either they try to go fast, and be the first car, called Lane Change Ahead (LCA) for violet and Current Speed (C) for orange, or they try to drive slowly and let the other car be first, called Lane Change Behind (LCB) for violet or Yield (Y) for orange. In this implementation you can choose the action they should take through the violet-merge-behind and the orange-yield switches to the left.
+
+Depeding on the actions chosen using the switches, the cars will be assigned a random starting speed. If they choose the faster action, their speed will be faster. Then they slowly accelerate to a macimal speed. If the violet car notices that the target lane is free and thus switching lanes is possible, it will do so. If it is not possible to switch lanes in time, violet will run into the red car in front and the simulation will return the maximum time of 10000 ticks to indicate conflict. The system will also report this maximal time if the orange car does not pass the red car in 10000 ticks. If the orange car does manage to complete the lane change and pass the red car in 10000 ticks, then the ticks it took for that are reported.
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Setup: Draws the environment and chooses the random speeds based on the actions
+Go: Starts one run
+violet-merge-behind: choose the actions for the violet car, LCB if true and LCA if false
+orange-yield: choose the actions for the orange car, Y if true and C if false
+spectator-mode: adds a delay to each ticks to better visualize the simulation if true
+displacement: these sliders control the intial displacements of the orange and violet car
 
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
+To carry out the repeated runs for the experiments and analysis you can click on Tools -> BehaviorSpace where you can see the experiments we ran or create your own.
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+Try varying the actions and the displacements!
+
+## THINGS TO NOTICE
+
+Notice how it is a lot more likely for conflict to happen if the cars both choose the aggressive or the passive actions.
+
+Also notice how when varying the displacements, conflicts is more likely the closer the cars are at the beginning.
+
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+One can implement a more difficult model for deciding the speeds. One such model is detailed in the paper "Resolving Conflict in Decision-Making for
+Autonomous Driving" by Jack Geary et. al.
 
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+Resolving Conflict in Decision-Making for Autonomous Driving by Jack Geary et.al.
+This model was adapted from the NetLogo example model: https://ccl.northwestern.edu/netlogo/models/Traffic2Lanes
 @#$#@#$#@
 default
 true
